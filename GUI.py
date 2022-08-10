@@ -5,8 +5,9 @@ from characterRecogntion import OpCharRec
 from postProcessing import  TextCleanUp
 from quearyExpansion import QuearyExpansion
 from PIL import Image
-import os
 import guiFunctions
+from informationRetrieval import informationRetrieval
+import os
 import nltk
 
 answerDict = None
@@ -66,21 +67,21 @@ class massGradingPage(Page):
 
     def getDocumentNameList(self):
         filename = filedialog.askdirectory()
-        images = main.obtainImages(filename)
+        images = guiFunctions.obtainImages(filename)
         self.documentList = images[1]
         for i in images[1]:
             self.initialDocumentList.insert("end", os.path.basename(i))
 
     def analyseDocuments(self):
         global answerDict
-        images = main.analyseDocuments(self.documentList)
+        images = guiFunctions.analyseDocuments(self.documentList)
         answerDict = images[1]
         for i in images[0]:
             self.analysedDocumentList.insert("end", i)
 
     def gradeAnswer(self):
         global answerDict, questionKeywordsDict
-        print(main.gradeAnswers(questionKeywordsDict, answerDict))
+        print(guiFunctions.gradeAnswers(questionKeywordsDict, answerDict))
 
     def __mainPage(self):
         frame = tk.Frame(self)
@@ -395,6 +396,7 @@ class OCRAnalysis(Page):
 class queryExpansion(Page):
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
+        self.informRetrieval = None
         self.questionKeywords = None
         self.questions = None
         self.questionSub = None
@@ -405,6 +407,7 @@ class queryExpansion(Page):
         self.previousRow = 0
         self.query = QuearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
         self.__mainPage()
+
     def addRow(self):
         global questionKeywordsDict
         self.questionNumber["state"] = "disabled"
@@ -457,6 +460,24 @@ class queryExpansion(Page):
                   command=self.confirmTopic
                   ).grid(column=0, row=0)
         self.frameDataGather.pack()
+        self.infoRetrieve = tk.Frame(self)
+        self.questionCheck = tk.Text(self.infoRetrieve, height=5, width=52)
+        self.questionCheck.grid(column=0, row=0)
+        tk.Button(self.infoRetrieve,
+                  text="Generate Answer",
+                  width=25,
+                  height=5,
+                  bg="grey",
+                  fg="black",
+                  command=self.generateAnswer
+                  ).grid(column=1, row=0)
+        self.answerRetrieved = tk.Text(self.infoRetrieve, height=5, width=52)
+        self.answerRetrieved.grid(column=2, row=0)
+        self.infoRetrieve.pack()
+
+    def generateAnswer(self):
+        question = self.questionCheck.get("1.0", 'end-1c')
+        self.informRetrieval.getAnswers(question)
 
     def obtainKeywords(self):
         top10Terms = self.query.top_10_terms(self.questions.get("1.0", 'end-1c'))
@@ -466,6 +487,8 @@ class queryExpansion(Page):
         self.Datagather.tag_add("here", "1.0", tk.END)
         self.Datagather.tag_config("here", background="black", foreground="green")
         self.Datagather["state"] = "disabled"
+        self.informRetrieval = informationRetrieval(' '.split(self.Datagather.get("1.0", 'end-1c')))
+
 
 
 class MainView(tk.Frame):

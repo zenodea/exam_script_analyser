@@ -38,42 +38,47 @@ def retrieverCreation(document_store):
     return retriever
 
 
+def document_store_Creation(doc_dir):
+    document_store = FAISSDocumentStore(faiss_index_factory_str="Flat")
+    # Let's first get some files that we want to use
+
+    # Convert files to dicts
+    docs = convert_files_to_docs(dir_path=doc_dir, clean_func=clean_wiki_text,
+                                 split_paragraphs=True)
+
+    # Now, let's write the dicts containing documents to our DB.
+    document_store.write_documents(docs)
+    return document_store
+
+
+def wikipediaRetrieval(wiki_page):
+    for section in wiki_page:
+        try:
+            res = requests.get(f'https://en.wikipedia.org/wiki/{section}')
+            res.raise_for_status()
+            wiki = bs4.BeautifulSoup(res.text, "html.parser")
+        except:
+            pass
+        # open a file named as your wiki page in write mode
+        with open("data/" + section + ".txt", "w", encoding="utf-8") as f:
+            for i in wiki.select('p'):
+                # write each paragraph to the file
+                f.write(i.getText())
+
+
 class informationRetrieval:
     def __init__(self, listofkeywords):
-        self.wikipediaRetrieval(listofkeywords)
+        wikipediaRetrieval(listofkeywords)
         self.document_store = None
         self.retriever = None
         self.reader = None
         self.pipe = None
 
     def startDatabaseCreation(self, doc_dir):
-        self.document_store = self.document_store_Creation(doc_dir)
+        self.document_store = document_store_Creation(doc_dir)
         self.retriever = retrieverCreation(self.document_store)
         self.reader = readerCreation()
         self.pipe = ExtractiveQAPipeline(self.reader, self.retriever)
 
-    def wikipediaRetrieval(self, wiki_page):
-        for section in wiki_page:
-            try:
-                res = requests.get(f'https://en.wikipedia.org/wiki/{section}')
-                res.raise_for_status()
-                wiki = bs4.BeautifulSoup(res.text, "html.parser")
-            except:
-                pass
-            # open a file named as your wiki page in write mode
-            with open("data/" + section + ".txt", "w", encoding="utf-8") as f:
-                for i in wiki.select('p'):
-                    # write each paragraph to the file
-                    f.write(i.getText())
-
-    def document_store_Creation(self, doc_dir):
-        document_store = FAISSDocumentStore(faiss_index_factory_str="Flat")
-        # Let's first get some files that we want to use
-
-        # Convert files to dicts
-        docs = convert_files_to_docs(dir_path=doc_dir, clean_func=clean_wiki_text,
-                                     split_paragraphs=True)
-
-        # Now, let's write the dicts containing documents to our DB.
-        document_store.write_documents(docs)
-        return document_store
+    def getAnswer(self, queary):
+        retreiveContext(queary, self.pipe)
