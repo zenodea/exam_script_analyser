@@ -33,8 +33,8 @@ def analyseDocuments(fileName):
     returnList = []
     extractedPages = []
     custom_label_map = {0: "answer", 1: "question", 2: "sub-question"}
-    lpmodel = DIA(r"/Users/zenodeangeli/Desktop/Findings/Model/config.yaml"
-                  , r"/Users/zenodeangeli/Desktop/Findings/Model/model_final.pth",
+    lpmodel = DIA(r"Model/config.yaml",
+                  r"Model/model_final.pth",
                   custom_label_map)
     for count, file in enumerate(fileName):
         name = os.path.basename(file)

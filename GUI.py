@@ -6,6 +6,7 @@ from postProcessing import quearyExpansion, TextCleanUp
 from PIL import Image
 import os
 import main
+import nltk
 
 answerDict = None
 questionKeywordsDict = {}
@@ -183,8 +184,8 @@ class DocumentSelection(Page):
         label.pack(side="top")
         self.filename = None
         custom_label_map = {0: "answer", 1: "question", 2: "sub-question"}
-        self.lpmodel = DIA(r"/Users/zenodeangeli/Desktop/Findings/Model/config.yaml",
-                           r"/Users/zenodeangeli/Desktop/Findings/Model/model_final.pth",
+        self.lpmodel = DIA(r"Model/config.yaml",
+                           r"Model/model_final.pth",
                            custom_label_map)
         self.__firstPage()
 
@@ -382,6 +383,7 @@ class OCRAnalysis(Page):
         wordList = []
         for block in self.ocrAnalysis:
             words = block.split(" ")
+            print(words)
             for word in words:
                 wordList.append(word)
         text = TextCleanUp(wordList, [])
@@ -392,25 +394,47 @@ class OCRAnalysis(Page):
 class queryExpansion(Page):
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
-        self.questionSub = None
+        self.questionKeywords = None
         self.questions = None
+        self.questionSub = None
+        self.questionNumber = None
+        self.query = quearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
         label = tk.Label(self, text="Question Set Up")
         label.pack(side="top")
         self.previousRow = 0
         self.query = quearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
         self.__mainPage()
-
     def addRow(self):
+        global questionKeywordsDict
+        self.questionNumber["state"] = "disabled"
+        self.questionSub["state"] = "disabled"
+        self.questions["state"] = "disabled"
+        self.obtainKeywords()
+        questionKeywordsDict[str(self.questionNumber.get("1.0", 'end-1c'))+str(self.questionSub.get("1.0", 'end-1c'))] \
+            = self.questionKeywords.get("1.0", 'end-1c')
+        print(questionKeywordsDict)
+        self.questionNumber = tk.Text(self.frameQuestions, height=3, width=5)
+        self.questionNumber.grid(column=0, row=self.previousRow)
         self.questionSub = tk.Text(self.frameQuestions, height=3, width=5)
-        self.questionSub.grid(column=0, row=self.previousRow)
+        self.questionSub.grid(column=1, row=self.previousRow)
         self.questions = tk.Text(self.frameQuestions, height=3, width=30)
-        self.questions.grid(column=1, row=self.previousRow)
+        self.questions.grid(column=2, row=self.previousRow)
+        self.questionKeywords = tk.Text(self.frameQuestions, height=3, width=30)
+        self.questionKeywords.grid(column=3, row=self.previousRow)
         self.previousRow += 1
 
     def __mainPage(self):
         self.frameQuestions = tk.Frame(self)
         self.frameQuestions.pack()
-        self.addRow()
+        self.questionNumber = tk.Text(self.frameQuestions, height=3, width=5)
+        self.questionNumber.grid(column=0, row=self.previousRow)
+        self.questionSub = tk.Text(self.frameQuestions, height=3, width=5)
+        self.questionSub.grid(column=1, row=self.previousRow)
+        self.questions = tk.Text(self.frameQuestions, height=3, width=30)
+        self.questions.grid(column=2, row=self.previousRow)
+        self.questionKeywords = tk.Text(self.frameQuestions, height=3, width=30)
+        self.questionKeywords.grid(column=3, row=self.previousRow)
+        self.previousRow += 1
         self.addRowBtn = tk.Button(self,
                                    text="Add Question",
                                    width=25,
@@ -420,28 +444,10 @@ class queryExpansion(Page):
                                    command=self.addRow
                                    )
         self.addRowBtn.pack()
-
-        frameQueary = tk.Frame(self)
-        frameQueary.pack(pady=50)
-        self.T = tk.Text(frameQueary, height=5, width=52)
-        self.T.grid(column=0, row=0)
-        self.Queary = tk.Text(frameQueary, height=5, width=52)
-        self.Queary.grid(column=2, row=0)
-        self.Queary["state"] = "disabled"
-        tk.Button(frameQueary,
-                  text="Obtain Keywords",
-                  width=25,
-                  height=5,
-                  bg="grey",
-                  fg="black",
-                  command=self.obtainKeywords
-                  ).grid(column=1, row=1)
-
-        frameDataGather = tk.Frame(self)
-        frameDataGather.pack(pady=50)
-        self.Datagather = tk.Text(frameDataGather, height=5, width=52)
+        self.frameDataGather = tk.Frame(self)
+        self.Datagather = tk.Text(self.frameDataGather, height=5, width=52)
         self.Datagather.grid(column=2, row=0)
-        tk.Button(frameDataGather,
+        tk.Button(self.frameDataGather,
                   text="Confirm Topics of Exam",
                   width=25,
                   height=5,
@@ -449,15 +455,11 @@ class queryExpansion(Page):
                   fg="black",
                   command=self.confirmTopic
                   ).grid(column=0, row=0)
+        self.frameDataGather.pack()
 
     def obtainKeywords(self):
-        global currQuestionKeywords
-        self.Queary["state"] = "normal"
-        self.Queary.delete('1.0', tk.END)
-        top10Terms = self.query.top_10_terms(self.T.get("1.0", 'end-1c'))
-        currQuestionKeywords = top10Terms
-        self.Queary.insert(tk.END, top10Terms)
-        self.Queary["state"] = "disabled"
+        top10Terms = self.query.top_10_terms(self.questions.get("1.0", 'end-1c'))
+        self.questionKeywords.insert(tk.END, top10Terms)
 
     def confirmTopic(self):
         self.Datagather.tag_add("here", "1.0", tk.END)
@@ -501,6 +503,8 @@ class MainView(tk.Frame):
 
 
 if __name__ == "__main__":
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
     root = tk.Tk()
     root.geometry("1000x800")
     app = MainView(root)

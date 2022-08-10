@@ -1,17 +1,33 @@
+import requests
+import bs4
+from haystack.document_stores import FAISSDocumentStore
+from haystack.utils import clean_wiki_text, convert_files_to_docs, fetch_archive_from_http, print_answers
+from haystack.nodes import FARMReader, TransformersReader
+from haystack.nodes import DensePassageRetriever
+from haystack.pipelines import ExtractiveQAPipeline
+
 class informationRetrieval:
-    def __init__(self, listofkeywords, doc_dir):
+    def __init__(self, listofkeywords):
         self.wikipediaRetrieval(listofkeywords)
+        self.document_store = None
+        self.retriever = None
+        self.reader = None
+        self.pipe = None
+
+    def startDatabaseCreation(self,doc_dir):
         self.document_store = self.document_store_Creation(doc_dir)
-        self.retriever = retrieverCreation(self.document_store)
-        self.reader = readerCreation()
+        self.retriever = self.retrieverCreation(self.document_store)
+        self.reader = self.readerCreation()
         self.pipe = ExtractiveQAPipeline(self.reader, self.retriever)
 
     def wikipediaRetrieval(self, wiki_page):
         for section in wiki_page:
-            res = requests.get(f'https://en.wikipedia.org/wiki/{section}')
-            res.raise_for_status()
-            wiki = bs4.BeautifulSoup(res.text, "html.parser")
-
+            try:
+                res = requests.get(f'https://en.wikipedia.org/wiki/{section}')
+                res.raise_for_status()
+                wiki = bs4.BeautifulSoup(res.text, "html.parser")
+            except:
+                pass
             # open a file named as your wiki page in write mode
             with open("data/" + section + ".txt", "w", encoding="utf-8") as f:
                 for i in wiki.select('p'):
@@ -31,7 +47,7 @@ class informationRetrieval:
         document_store.write_documents(docs)
         return document_store
 
-    def retrieverCreation(document_store):
+    def retrieverCreation(self,document_store):
         retriever = DensePassageRetriever(
             document_store=document_store,
             query_embedding_model="facebook/dpr-question_encoder-single-nq-base",
@@ -51,7 +67,9 @@ class informationRetrieval:
                             use_gpu=True)
         return reader
 
-
     def retreiveContext(self, queary, pipe):
-        prediction = pipe.run(query=queary, params={"Retriever": {"top_k": 15}, "Reader": {"top_k": 1}})
+        prediction = pipe.run(query=queary, params={"Retriever": {"top_k": 15}, "Reader": {"top_k": 5}})
         print_answers(prediction, details="minimum")
+
+    def retriveContext_ObtainKeywords(self,queary, pipe):
+        prediction = pipe.run(query=queary, params={"Retriever": {"top_k": 15}, "Reader": {"top_k": 5}})

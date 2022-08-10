@@ -4,6 +4,7 @@ import cv2
 import numpy
 from PIL import Image
 
+
 class DIA:
     def __init__(self, configPath, modelPath, customLabelMap):
         self.docPath = None
