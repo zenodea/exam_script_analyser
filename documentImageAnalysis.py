@@ -1,5 +1,4 @@
 import layoutparser as lp
-import os
 import cv2
 import numpy
 from PIL import Image

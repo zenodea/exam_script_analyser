@@ -2,7 +2,7 @@ import warnings
 import os
 import cv2
 from documentImageAnalysis import DIA
-from ocr import OpCharRec
+from characterRecogntion import OpCharRec
 import examGrading
 import postProcessing
 

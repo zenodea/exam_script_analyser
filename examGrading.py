@@ -1,20 +1,21 @@
 import pyxdameraulevenshtein
 from collections import Counter
 from math import sqrt
+from nltk.corpus import wordnet
 
 
 def correct_sentence(sentence, keywords):
     new_sentence = []
     for word in sentence:
         budget = 2
-        n = lewn(word)
+        n = len(word)
         if n < 3:
             budget = 0
         elif 3 <= n < 6:
             budget = 1
         if budget:
             for keyword in keywords:
-                if damerau_levenshtein_distance(word, keyword) <= budget:
+                if pyxdameraulevenshtein.damerau_levenshtein_distance(word, keyword) <= budget:
                     new_sentence.append(keyword)
                     break
             else:

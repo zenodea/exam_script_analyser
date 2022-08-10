@@ -1,11 +1,12 @@
 from documentImageAnalysis import DIA
 import tkinter as tk
 from tkinter import filedialog
-from ocr import OpCharRec
-from postProcessing import quearyExpansion, TextCleanUp
+from characterRecogntion import OpCharRec
+from postProcessing import  TextCleanUp
+from quearyExpansion import QuearyExpansion
 from PIL import Image
 import os
-import main
+import guiFunctions
 import nltk
 
 answerDict = None
@@ -33,7 +34,7 @@ class massGradingPage(Page):
         self.questions = None
         self.questionSub = None
         self.questionNumber = None
-        self.query = quearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
+        self.query = QuearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
         label = tk.Label(self, text="Mass Grading Document")
         self.documentList = None
         self.previousRow = 0
@@ -398,11 +399,11 @@ class queryExpansion(Page):
         self.questions = None
         self.questionSub = None
         self.questionNumber = None
-        self.query = quearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
+        self.query = QuearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
         label = tk.Label(self, text="Question Set Up")
         label.pack(side="top")
         self.previousRow = 0
-        self.query = quearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
+        self.query = QuearyExpansion("AIzaSyA08U6HI20_JVgCDkZTRp-B3Wq0Ch1j8co", "1341c904f8dbf41ed")
         self.__mainPage()
     def addRow(self):
         global questionKeywordsDict

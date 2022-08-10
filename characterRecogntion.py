@@ -4,6 +4,7 @@ from doctr.models import ocr_predictor
 from PIL import Image
 from transformers import VisionEncoderDecoderModel, TrOCRProcessor
 
+
 class OpCharRec:
     def __init__(self, boolean):
         self.analysedDocument = None
