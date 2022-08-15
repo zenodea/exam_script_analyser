@@ -5,7 +5,8 @@ from haystack.utils import clean_wiki_text, convert_files_to_docs, fetch_archive
 from haystack.nodes import FARMReader, TransformersReader
 from haystack.nodes import DensePassageRetriever
 from haystack.pipelines import ExtractiveQAPipeline
-
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def readerCreation():
     reader = FARMReader(model_name_or_path="deepset/roberta-base-squad2",
@@ -25,27 +26,22 @@ def retriveContext_ObtainKeywords(queary, pipe):
 def retrieverCreation(document_store):
     retriever = DensePassageRetriever(
         document_store=document_store,
-        query_embedding_model="facebook/dpr-question_encoder-single-nq-base",
-        passage_embedding_model="facebook/dpr-ctx_encoder-single-nq-base",
-        max_seq_len_query=64,
-        max_seq_len_passage=256,
-        batch_size=16,
-        use_gpu=True,
-        embed_title=True,
-        use_fast_tokenizers=True,
+        query_embedding_model="vblagoje/dpr-question_encoder-single-lfqa-wiki",
+        passage_embedding_model="vblagoje/dpr-ctx_encoder-single-lfqa-wiki",
     )
     document_store.update_embeddings(retriever)
     return retriever
 
 
 def document_store_Creation(doc_dir):
-    document_store = FAISSDocumentStore(faiss_index_factory_str="Flat")
+    document_store = FAISSDocumentStore(embedding_dim=128, faiss_index_factory_str="Flat")
     # Let's first get some files that we want to use
 
     # Convert files to dicts
     docs = convert_files_to_docs(dir_path=doc_dir, clean_func=clean_wiki_text,
                                  split_paragraphs=True)
 
+    print(docs[1])
     # Now, let's write the dicts containing documents to our DB.
     document_store.write_documents(docs)
     return document_store

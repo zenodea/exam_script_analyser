@@ -1,7 +1,19 @@
 from googleapiclient.discovery import build
 from collections import Counter
-import pprint
+import nltk
 
+def findVN(wordList, boolean):
+    tokenized = nltk.word_tokenize(' '.join(wordList))
+    tagged = nltk.pos_tag(tokenized)
+    nouns = [x[0] for x in tagged if x[1] == "NN"]
+    verbs = [x[0] for x in tagged if x[1] == "VB"]
+    adjective = [x[0] for x in tagged if x[1] == "JJ"]
+    adverbs = [x[0] for x in tagged if x[1] == "RB"]
+    noun = [word for word in nouns if len(word) >= 2]
+    verb = [word for word in verbs if len(word) >= 2]
+    adj = [word for word in adjective if len(word) >= 2]
+    adv = [word for word in adverbs if len(word) >= 2]
+    return noun + verb + adj + adv
 
 class QuearyExpansion:
     def __init__(self, api_key, cse_id):
@@ -21,6 +33,7 @@ class QuearyExpansion:
         joinedSnippets = ' '.join(temp)
 
         listVN = findVN(joinedSnippets.split(" "), False)
+
         # Frequency and Top Terms
         wordFrequency = Counter(listVN)
         mostCommon = wordFrequency.most_common()[0:15]

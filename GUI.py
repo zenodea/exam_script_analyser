@@ -1,3 +1,4 @@
+import examGrading
 from documentImageAnalysis import DIA
 import tkinter as tk
 from tkinter import filedialog
@@ -164,20 +165,29 @@ class answerPage(Page):
                   command=self.updateInformation
                   ).grid(column=1, row=1, columnspan=1)
         tk.Button(frame,
-                  text="Similarity Between Information",
+                  text="Obtain Result",
                   width=15,
                   height=5,
                   bg="grey",
-                  fg="black"
+                  fg="black",
+                  command=self.compareLists
                   ).grid(column=2, row=1, columnspan=1)
         self.similarity = tk.Text(self, height=6, width=30)
         self.similarity.pack()
 
+    def compareLists(self):
+        listAnswer = ' '.split(self.studentAnswer.get("1.0", 'end-1c'))
+        listQuestion = ' '.split(self.questionKeywords.get("1.0", 'end-1c'))
+        print(examGrading.obtainSimilarity(listAnswer, listQuestion))
+
     def updateInformation(self):
         global currQuestionKeywords, currAnswerKeywords
+        self.studentAnswer["state"] = "normal"
+        self.questionKeywords["state"] = "normal"
         self.studentAnswer.insert("end-1c", currAnswerKeywords)
-        self.questionKeywords.insert("end-1c", currQuestionKeywords)
-
+        self.questionKeywords.insert("end-1c", questionKeywordsDict.get("1a"))
+        self.studentAnswer["state"] = "disabled"
+        self.questionKeywords["state"] = "disabled"
 
 class DocumentSelection(Page):
     def __init__(self, *args, **kwargs):
@@ -389,7 +399,7 @@ class OCRAnalysis(Page):
             for word in words:
                 wordList.append(word)
         text = TextCleanUp(wordList, [])
-        currAnswerKeywords = text.cleanedUpText
+        currAnswerKeywords = wordList
         self.keyPoints.insert(tk.END, text.cleanedUpText)
 
 
