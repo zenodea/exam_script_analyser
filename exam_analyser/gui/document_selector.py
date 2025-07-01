@@ -1,8 +1,17 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from PIL import Image
 from ..core.document_analysis import DocumentImageAnalysis
-from .main_window import Page
+
+
+class Page(tk.Frame):
+    """Base page class for GUI pages."""
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+
+    def show(self):
+        """Bring this page to the front."""
+        self.lift()
 
 
 class DocumentSelector(Page):
